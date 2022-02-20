@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "es2020",  // language feature
+    "module": "es2020", // module syntax
+    "lib": ["ES2020"],  // runtime version
+    "strict": false,
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "sourceMap": true,
+    "allowJs": true,
+    "esModuleInterop": true,
+    "types": [
+      "@cloudflare/workers-types",
+      "@types/service-worker-mock"
+    ]
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
