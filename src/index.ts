@@ -1,60 +1,70 @@
-import { Router } from 'itty-router'
+import {
+    Application,
+    Middleware,
+    Router,
+    validate,
+    normalizePathnameMiddleware,
+} from '@cfworker/web'
 
-// Create a new router
-const router = Router()
+const router = new Router()
 
-/*
-Our index route, a simple hello world.
-*/
-router.get('/', () => {
-    return new Response(
-        'Hello, world! This is the root page of your Worker template.'
-    )
+// Add the homepage route.
+router.get('/', ({ res }) => {
+    res.body = `
+    <h1>@cfworker/web demo</h1>
+    <h2 id="example-routes">Example routes</h2>
+    <ol aria-labelledby="example-routes">
+      <li><a href="/greetings/hello">A valid greeting</a></li>
+      <li><a href="/greetings/hell">An invalid greeting</a></li>
+      <li><a href="/error">A route with a bug</a></li>
+    </ol>
+    <img src="favicon.ico" alt="cfworker logo">`
 })
 
-/*
-This shows a different HTTP method, a POST.
-
-Try send a POST request using curl or another tool.
-
-Try the below curl command to send JSON:
-
-$ curl -X POST <worker> -H "Content-Type: application/json" -d '{"abc": "def"}'
-*/
-router.post('/post', async request => {
-    // Create a base object with some fields.
-    let fields = {
-        asn: request.cf.asn,
-        colo: request.cf.colo,
-    }
-
-    // If the POST data is JSON then attach it to our response.
-    if (request.headers.get('Content-Type') === 'application/json') {
-        fields['json'] = await request.json()
-    }
-
-    // Serialise the JSON to a string.
-    const returnData = JSON.stringify(fields, null, 2)
-
-    return new Response(returnData, {
-        headers: {
-            'Content-Type': 'application/json',
+// Add a greeting route with validation.
+router.get(
+    '/greetings/:greeting',
+    validate({
+        params: {
+            required: ['greeting'],
+            properties: {
+                greeting: {
+                    minLength: 5,
+                    maxLength: 10,
+                },
+            },
         },
-    })
+    }),
+    ({ req, res }) => {
+        res.body = req.params
+    }
+)
+
+// Add a route to demonstrate exception handling.
+router.get('/error', () => {
+    // @ts-ignore - this route has a bug!
+    req.this.method.does.not.exist()
 })
 
-/*
-This is the last route we define, it will match anything that hasn't hit a route we've defined
-above, therefore it's useful as a 404 (and avoids us hitting worker exceptions, so make sure to include it!).
-
-Visit any page that doesn't exist (e.g. /foobar) to see it in action.
-*/
-router.all('*', () => new Response('404, not found!', { status: 404 }))
-
-/*
-This snippet ties our worker to the router we deifned above, all incoming requests
-are passed to the router where your routes are called and the response is sent.
-*/
-addEventListener('fetch', e => {
-    e.respondWith(router.handle(e.request))
+// Favicon route for fun :)
+router.get('/favicon.ico', ({ res }) => {
+    res.type = 'image/svg+xml'
+    res.body = `
+      <svg xmlns="http://www.w3.org/2000/svg" baseProfile="full" width="200" height="200">
+        <rect width="100%" height="100%" fill="#F38020"/>
+        <text font-size="120" font-family="Arial, Helvetica, sans-serif" text-anchor="end" fill="#FFF" x="185" y="185">W</text>
+      </svg>`
 })
+
+// Simple CORS middleware.
+const cors: Middleware = async ({ res }, next) => {
+    res.headers.set('access-control-allow-origin', '*')
+    await next()
+}
+
+// Compose the application
+new Application()
+    .use(normalizePathnameMiddleware)
+    .use(cors)
+    .use(router.middleware)
+    .listen()

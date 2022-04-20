@@ -21,7 +21,7 @@
         "webpack-cli": "^4.9.2"
     },
     "dependencies": {
-        "itty-router": "^2.1.9",
+        "@cfworker/web": "^1.12.3",
         "serverless-cloudflare-workers": "^1.2.0"
     }
 }

@@ -1,8 +1,7 @@
 > based on https://github.com/cloudflare/worker-template-router, with ts setup.
+> removed itty-router, use @cfworker/web instead. https://www.npmjs.com/package/@cfworker/web
 
 ## cf-ts-router
-
-This template demonstrates using the [`itty-router`](https://github.com/kwhitley/itty-router) package to add routing to your Cloudflare Workers.
 
 [`index.js`](https://github.com/cloudflare/worker-template-router/blob/master/index.js) is the content of the Workers script.
 
